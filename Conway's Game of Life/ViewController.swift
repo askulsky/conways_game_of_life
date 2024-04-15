@@ -43,6 +43,7 @@ class ViewController: UIViewController {
         setupInitialGrid()
         
         view.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan)))
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
         
         resetButton.setImage(UIImage(systemName: "arrow.counterclockwise"), for: .normal)
         
@@ -85,6 +86,14 @@ class ViewController: UIViewController {
     }
     
     @objc func handlePan(gesture: UIPanGestureRecognizer) {
+        self.handleGesture(gesture)
+    }
+    
+    @objc func handleTap(gesture: UITapGestureRecognizer) {
+        self.handleGesture(gesture)
+    }
+    
+    func handleGesture<T: UIGestureRecognizer>(_ gesture: T) {
         let location = gesture.location(in: gridView)
         let i = Int(location.x / self.width)
         let j = Int(location.y / self.height)
@@ -92,11 +101,7 @@ class ViewController: UIViewController {
         let key = "\(i)|\(j)"
         guard let cellView = cells[key] else { return }
         
-        if selectedCell != cellView {
-            self.selectedCell?.backgroundColor = .black
-        }
-        
-        selectedCell = cellView
+        cellView.backgroundColor = .black
     }
     
     @objc func playPauseButtonTapped() {
