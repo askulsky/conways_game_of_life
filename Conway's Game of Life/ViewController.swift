@@ -15,6 +15,7 @@ class ViewController: UIViewController {
     }
     
     let numCellsPerRow = 15
+    var numCellsPerCol: Int?
     var selectedCell: UIView?
     var gridView: UIView?
     var width: CGFloat = UIScreen.main.bounds.width / CGFloat(15)
@@ -38,6 +39,7 @@ class ViewController: UIViewController {
         
         self.gridView = UIView(frame: CGRect(x: 0, y: 0, width: self.width, height: self.height))
         view.addSubview(gridView!)
+        calculateCellsInCol()
         setupInitialGrid()
         
         view.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePan)))
@@ -65,9 +67,14 @@ class ViewController: UIViewController {
         resetButton.addTarget(self, action: #selector(resetButtonTapped), for: .touchUpInside)
     }
     
+    func calculateCellsInCol() {
+        let cellSize = UIScreen.main.bounds.width / CGFloat(numCellsPerRow)
+        self.numCellsPerCol = Int(ceil(UIScreen.main.bounds.height / cellSize))
+    }
+    
     func setupInitialGrid() {
         isPlaying = false
-        for j in 0...35 {
+        for j in 0...numCellsPerCol! {
             for i in 0...numCellsPerRow {
                 let cellView = createCell(.DEAD, i, j)
                 gridView!.addSubview(cellView)
@@ -107,7 +114,7 @@ class ViewController: UIViewController {
         if cells.contains(where: { $0.value.backgroundColor == .black }) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { return }
-                for j in 0...35 {
+                for j in 0...numCellsPerCol! {
                     for i in 0...self.numCellsPerRow {
                         let key = "\(i)|\(j)"
                         let liveNeighbors = self.countAliveNeighbors(i, j)
