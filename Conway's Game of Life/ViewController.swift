@@ -5,7 +5,10 @@
 //  Created by Aaron Skulsky on 4/13/24.
 //
 
+import Foundation
 import UIKit
+import Dispatch
+
 
 class ViewController: UIViewController {
     
@@ -25,6 +28,7 @@ class ViewController: UIViewController {
     let playPauseButton = BaseButton()
     let resetButton = BaseButton()
     
+    private var resetEventRegistration: NSObjectProtocol?
     
     var isPlaying: Bool = false {
         didSet {
@@ -110,12 +114,21 @@ class ViewController: UIViewController {
     }
     
     @objc func resetButtonTapped() {
+        EventBus.publish(ResetEvent())
         setupInitialGrid()
     }
     
     func runConway() {
         var newCells: [String: UIView] = [:]
         var stale = true
+        var reset = false
+        
+        resetEventRegistration = EventBus.subscribe { [weak self] (event: ResetEvent) in
+            guard let self = self else { return }
+            EventBus.unsubscribe(self.resetEventRegistration)
+            reset = true
+        }
+        
         if cells.contains(where: { $0.value.backgroundColor == .black }) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { return }
@@ -143,35 +156,39 @@ class ViewController: UIViewController {
                     }
                 }
                 
-                
-                
-                for (key, newCell) in newCells {
-                    if let oldView = cells[key] {
-                        oldView.removeFromSuperview()
-                    }
-                    // Add the new view to the parent view
-                    gridView!.addSubview(newCell)
-                }
-                
-                cells = newCells
-                
-                if stale {
-                    isPlaying = false
-                    let alert = UIAlertController(title: "Alert", message: "Reached Equilibrium", preferredStyle: .alert)
-                    let action = UIAlertAction(title: "Dismiss", style: .default) { _ in
-                        self.setupInitialGrid()
-                    }
-                    
-                    alert.addAction(action)
-                    self.present(alert, animated: true)
-                }
-                
-                if isPlaying {
-                    runConway()
-                }
+                handleUpdate(newCells, stale, reset)
             }
         } else {
             isPlaying.toggle()
+        }
+    }
+    
+    func handleUpdate(_ newCells: [String: UIView], _ stale: Bool, _ reset: Bool) {
+        guard !reset else { return }
+        
+        for (key, newCell) in newCells {
+            if let oldView = cells[key] {
+                oldView.removeFromSuperview()
+            }
+            
+            gridView!.addSubview(newCell)
+        }
+        
+        cells = newCells
+        
+        if stale {
+            isPlaying = false
+            let alert = UIAlertController(title: "Alert", message: "Reached Equilibrium", preferredStyle: .alert)
+            let action = UIAlertAction(title: "Dismiss", style: .default) { _ in
+                self.setupInitialGrid()
+            }
+            
+            alert.addAction(action)
+            self.present(alert, animated: true)
+        }
+        
+        if isPlaying {
+            runConway()
         }
     }
     
@@ -203,6 +220,8 @@ class ViewController: UIViewController {
     }
 }
 
+class ResetEvent {}
+
 class BaseButton: UIButton {
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -223,3 +242,29 @@ class BaseButton: UIButton {
     }
 }
 
+public class EventBus {
+    
+    private static let userInfoEventKey = "EVENT"
+    
+    public static func publish<E: Any>(_ event: E, name: String = String(describing: E.self)) {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name(name), object: nil, userInfo: [userInfoEventKey: event])
+        }
+    }
+    
+    @discardableResult public static func subscribe<E: Any>(_ callback: @escaping (E) -> Void) -> NSObjectProtocol {
+        return NotificationCenter.default.addObserver(forName: NSNotification.Name(String(describing: E.self)), object: nil, queue: nil, using: { notification in
+            if let event = notification.userInfo?[userInfoEventKey] as? E {
+                DispatchQueue.main.async {
+                    callback(event)
+                }
+            }
+        })
+    }
+    
+    public static func unsubscribe(_ token: NSObjectProtocol?) {
+        if let token = token {
+            NotificationCenter.default.removeObserver(token)
+        }
+    }
+}
