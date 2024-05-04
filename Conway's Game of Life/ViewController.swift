@@ -9,31 +9,17 @@ import Foundation
 import UIKit
 import Dispatch
 
-
 class ViewController: UIViewController {
+    let vm = ConwayViewModel()
     
-    enum Viability {
-        case DEAD
-        case ALIVE
-    }
-    
-    let numCellsPerRow = 15
-    var numCellsPerCol: Int?
-    var selectedCell: UIView?
     var gridView: UIView?
-    var width: CGFloat = UIScreen.main.bounds.width / CGFloat(15)
-    var height: CGFloat = UIScreen.main.bounds.width / CGFloat(15)
-    var cells = [String: UIView]()
-    
     let playPauseButton = BaseButton()
     let resetButton = BaseButton()
-    
-    private var resetEventRegistration: NSObjectProtocol?
     
     var isPlaying: Bool = false {
         didSet {
             // Update button image based on playback state
-            let imageName = isPlaying ? "pause.fill" : "play.fill"
+            let imageName = vm.isPlaying ? "pause.fill" : "play.fill"
             playPauseButton.setImage(UIImage(systemName: imageName), for: .normal)
         }
     }
@@ -41,7 +27,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.gridView = UIView(frame: CGRect(x: 0, y: 0, width: self.width, height: self.height))
+        self.gridView = UIView(frame: CGRect(x: 0, y: 0, width: vm.width, height: vm.height))
         view.addSubview(gridView!)
         calculateCellsInCol()
         setupInitialGrid()
@@ -73,18 +59,19 @@ class ViewController: UIViewController {
     }
     
     func calculateCellsInCol() {
-        let cellSize = UIScreen.main.bounds.width / CGFloat(numCellsPerRow)
-        self.numCellsPerCol = Int(ceil(UIScreen.main.bounds.height / cellSize))
+        let cellSize = UIScreen.main.bounds.width / CGFloat(vm.numCellsPerRow)
+        vm.numCellsPerCol = Int(ceil(UIScreen.main.bounds.height / cellSize))
     }
     
     func setupInitialGrid() {
-        isPlaying = false
-        for j in 0...numCellsPerCol! {
-            for i in 0...numCellsPerRow {
-                let cellView = createCell(.DEAD, i, j)
+        vm.isPlaying = false
+        isPlaying = vm.isPlaying
+        for j in 0...vm.numCellsPerCol! {
+            for i in 0...vm.numCellsPerRow {
+                let cellView = vm.createCell(.DEAD, i, j)
                 gridView!.addSubview(cellView)
                 let key = "\(i)|\(j)"
-                cells[key] = cellView
+                vm.cells[key] = cellView
             }
         }
     }
@@ -99,85 +86,45 @@ class ViewController: UIViewController {
     
     func handleGesture<T: UIGestureRecognizer>(_ gesture: T) {
         let location = gesture.location(in: gridView)
-        let i = Int(location.x / self.width)
-        let j = Int(location.y / self.height)
+        let i = Int(location.x / vm.width)
+        let j = Int(location.y / vm.height)
         
         let key = "\(i)|\(j)"
-        guard let cellView = cells[key] else { return }
+        guard let cellView = vm.cells[key] else { return }
         
         cellView.backgroundColor = .black
     }
     
     @objc func playPauseButtonTapped() {
-        isPlaying.toggle()
-        runConway()
+        vm.isPlaying.toggle()
+        vm.runConway { [weak self] (newCells, stale, reset) in
+            self?.handleUpdate(newCells, stale, reset)
+        }
     }
     
     @objc func resetButtonTapped() {
         EventBus.publish(ResetEvent())
+        vm.isPlaying = false
         setupInitialGrid()
     }
     
-    func runConway() {
-        var newCells: [String: UIView] = [:]
-        var stale = true
-        var reset = false
-        
-        resetEventRegistration = EventBus.subscribe { [weak self] (event: ResetEvent) in
-            guard let self = self else { return }
-            EventBus.unsubscribe(self.resetEventRegistration)
-            reset = true
-        }
-        
-        if cells.contains(where: { $0.value.backgroundColor == .black }) {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                guard let self = self else { return }
-                for j in 0...numCellsPerCol! {
-                    for i in 0...self.numCellsPerRow {
-                        let key = "\(i)|\(j)"
-                        let liveNeighbors = self.countAliveNeighbors(i, j)
-                        if cells[key]?.backgroundColor == .black {
-                            if liveNeighbors < 2 || liveNeighbors > 3 {
-                                let cellView = createCell(.DEAD, i, j)
-                                newCells[key] = cellView
-                                stale = false
-                            } else {
-                                newCells[key] = cells[key]
-                            }
-                        } else {
-                            if liveNeighbors == 3 {
-                                let cellView = createCell(.ALIVE, i, j)
-                                newCells[key] = cellView
-                                stale = false
-                            } else {
-                                newCells[key] = cells[key]
-                            }
-                        }
-                    }
-                }
-                
-                handleUpdate(newCells, stale, reset)
-            }
-        } else {
-            isPlaying.toggle()
-        }
-    }
-    
     func handleUpdate(_ newCells: [String: UIView], _ stale: Bool, _ reset: Bool) {
-        guard !reset else { return }
+        guard !reset && vm.shouldUpdateView else { return }
+        
+        vm.shouldUpdateView = false
         
         for (key, newCell) in newCells {
-            if let oldView = cells[key] {
+            if let oldView = vm.cells[key] {
                 oldView.removeFromSuperview()
             }
             
             gridView!.addSubview(newCell)
         }
         
-        cells = newCells
+        vm.cells = newCells
+        isPlaying = vm.isPlaying
         
         if stale {
-            isPlaying = false
             let alert = UIAlertController(title: "Alert", message: "Reached Equilibrium", preferredStyle: .alert)
             let action = UIAlertAction(title: "Dismiss", style: .default) { _ in
                 self.setupInitialGrid()
@@ -185,38 +132,14 @@ class ViewController: UIViewController {
             
             alert.addAction(action)
             self.present(alert, animated: true)
+            return
         }
         
         if isPlaying {
-            runConway()
-        }
-    }
-    
-    func createCell(_ viability: Viability, _ i: Int, _ j: Int) -> UIView {
-        let cellView = UIView()
-        cellView.backgroundColor = viability == .ALIVE ? .black : .white
-        cellView.frame = CGRect(x: CGFloat(i) * width, y: CGFloat(j) * height, width: width, height: height)
-        cellView.layer.borderWidth = 0.5
-        cellView.layer.borderColor = UIColor.black.cgColor
-        return cellView
-    }
-    
-    func countAliveNeighbors(_ row: Int, _ col: Int) -> Int {
-        var count = 0
-        for i in -1...1 {
-            for j in -1...1 {
-                if i == 0 && j == 0 {
-                    continue
-                }
-                let neighborRow = row + i
-                let neighborCol = col + j
-                if let neighborCell = cells["\(neighborRow)|\(neighborCol)"], neighborCell.backgroundColor == .black {
-                    count += 1
-                }
+            vm.runConway { [weak self] (newCells, stale, reset) in
+                self?.handleUpdate(newCells, stale, reset)
             }
         }
-        
-        return count
     }
 }
 

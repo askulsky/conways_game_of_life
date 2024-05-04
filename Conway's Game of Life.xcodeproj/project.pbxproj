@@ -12,6 +12,7 @@
 		936ACAA62BCAC75D00553473 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 936ACAA52BCAC75D00553473 /* ViewController.swift */; };
 		936ACAAB2BCAC75E00553473 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 936ACAAA2BCAC75E00553473 /* Assets.xcassets */; };
 		936ACAAE2BCAC75E00553473 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = 936ACAAD2BCAC75E00553473 /* Base */; };
+		93DF37F32BD1F1C10028359B /* ConwayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DF37F22BD1F1C10028359B /* ConwayViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		936ACAAA2BCAC75E00553473 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		936ACAAD2BCAC75E00553473 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		936ACAAF2BCAC75E00553473 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		93DF37F22BD1F1C10028359B /* ConwayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConwayViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +59,7 @@
 				936ACAA12BCAC75D00553473 /* AppDelegate.swift */,
 				936ACAA32BCAC75D00553473 /* SceneDelegate.swift */,
 				936ACAA52BCAC75D00553473 /* ViewController.swift */,
+				93DF37F22BD1F1C10028359B /* ConwayViewModel.swift */,
 				936ACAAA2BCAC75E00553473 /* Assets.xcassets */,
 				936ACAAC2BCAC75E00553473 /* LaunchScreen.storyboard */,
 				936ACAAF2BCAC75E00553473 /* Info.plist */,
@@ -135,6 +138,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				936ACAA62BCAC75D00553473 /* ViewController.swift in Sources */,
+				93DF37F32BD1F1C10028359B /* ConwayViewModel.swift in Sources */,
 				936ACAA22BCAC75D00553473 /* AppDelegate.swift in Sources */,
 				936ACAA42BCAC75D00553473 /* SceneDelegate.swift in Sources */,
 			);
@@ -278,9 +282,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = WF726NEYBP;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Conway's Game of Life/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -294,6 +299,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Portfolio.Conway-s-Game-of-Life";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -305,9 +311,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = WF726NEYBP;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Conway's Game of Life/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -321,6 +328,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Portfolio.Conway-s-Game-of-Life";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
